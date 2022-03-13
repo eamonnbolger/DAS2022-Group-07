@@ -1,0 +1,23 @@
+---
+title: "Group_07_Analysis.Rmd"
+author: "DAS Group 07"
+date: "13/03/2022"
+output: powerpoint_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)                                   # Loading required packages
+library(moderndive)
+library(gapminder)
+library(sjPlot)
+library(stats)
+library(jtools)
+```
+
+Importing the csv dataset:
+
+```{r data import}
+coffee <- read.csv('dataset7.csv')
+```
+
