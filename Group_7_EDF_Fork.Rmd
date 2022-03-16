@@ -1,0 +1,135 @@
+---
+title: "Group_7_EDF_Fork"
+author: "DAS Group 07"
+date: "15/03/2022"
+output:
+  slidy_presentation: default
+  beamer_presentation: default
+  powerpoint_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(kableExtra)
+library(skimr)
+library(ggcorrplot)
+library(gridExtra)
+```
+
+```{r data and packages, include=FALSE}
+coffee <- read.csv('dataset7.csv')
+coffee <- as_tibble(coffee)
+coffee <- coffee %>% 
+  rename(altitude = altitude_mean_meters) %>% 
+  rename(defects = category_two_defects) %>% 
+  rename(country = country_of_origin)
+glimpse(coffee)
+```
+
+Initially, summary statistics reveal a couple of erroneous altitude datapoints. (The highest two values are many times the altitude of the peak of Mount Everest!)
+
+```{r}
+# removing the two data errors for altitude
+coffee$altitude <- ifelse(coffee$altitude > 8000, NA, coffee$altitude)
+```
+
+
+Table of summary statistics for continuous variables:
+
+```{r cont_summaries, warning = FALSE}
+cont_summ <- coffee %>% 
+  select(aroma, flavor, acidity, altitude, defects) %>% 
+  summarise_each(funs(mean = round(mean(., na.rm = TRUE), 2),
+                      sd = round(sd(., na.rm = TRUE), 2),
+                      min = min(., na.rm = TRUE),
+                      q25 = quantile(., 0.25, na.rm = TRUE), 
+                      median = median(., na.rm = TRUE), 
+                      q75 = quantile(., 0.75, na.rm = TRUE), 
+                      max = max(., na.rm = TRUE))) %>% 
+  gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "_") %>%
+  spread(stat, val) %>%
+  select(var, mean, sd, min, q25, median, q75, max) %>%
+  slice(3, 5, 1, 2, 4) %>% 
+  kable(caption = 'Summary statistics for coffee grades (1-10), mean altitude (metres) and defects (integer).')
+
+cont_summ
+```
+
+Summary statistics reveal a couple of erroneous altitude datapoints. (The highest two values are many times the altitude of the peak of Mount Everest!)
+
+
+A correlation plot of the numeric variables was generated:
+
+```{r}
+correlations <- cor(coffee[,2:6], use="pairwise.complete.obs") # ignore missing values
+ggcorrplot(correlations, 
+           hc.order = TRUE, type = "lower", lab = TRUE)
+```
+
+The three coffee scoring variables (aroma, flavour, acidity) seem strongly positive correlated, so we may not expect to see all in a final model.
+
+Boxplots of the numerical variables were produced, split by quality classification:
+
+```{r boxplots, warning = FALSE}
+box1 <- coffee %>%
+  ggplot(aes(x = Qualityclass, y = aroma)) +
+  geom_boxplot(aes(fill = Qualityclass), show.legend = FALSE) +
+  labs(x = "Quality Class", y = "Aroma grade") +
+  theme(axis.title = element_text(size = 9))
+
+box2 <- coffee %>%
+  ggplot(aes(x = Qualityclass, y = flavor)) +
+  geom_boxplot(aes(fill = Qualityclass), show.legend = FALSE) +
+  labs(x = "Quality Class", y = "Flavour grade") +
+  theme(axis.title = element_text(size = 9))
+
+box3 <- coffee %>%
+  ggplot(aes(x = Qualityclass, y = acidity)) +
+  geom_boxplot(aes(fill = Qualityclass), show.legend = FALSE) +
+  labs(x = "Quality Class", y = "Acidity grade") +
+  theme(axis.title = element_text(size = 9))
+
+box4 <- coffee %>%
+  ggplot(aes(x = Qualityclass, y = altitude)) +
+  geom_boxplot(aes(fill = Qualityclass), show.legend = FALSE) +
+  labs(x = "Quality Class", y = "Altitude (m)") +
+  theme(axis.title = element_text(size = 9))
+
+box5 <- coffee %>%
+  ggplot(aes(x = Qualityclass, y = defects)) +
+  geom_boxplot(aes(fill = Qualityclass), show.legend = FALSE) +
+  labs(x = "Quality Class", y = "# of defects") +
+  theme(axis.title = element_text(size = 9))
+
+lay <- cbind(c(1,1,2,2,3,3),
+             c(4,4,4,5,5,5))
+grid.arrange(box1, box2, box3, box5, box4, layout_matrix = lay)
+```
+
+Bar plots of quality by country and year.
+
+```{r bar charts, warnings = FALSE}
+
+countries <- table(coffee$Qualityclass, coffee$country)
+countries <- as.data.frame(countries)
+colnames(countries)<- c('quality','country','count')
+
+bar1 <- countries %>% 
+  ggplot(aes(x = country, y = count)) +
+  geom_col(aes(fill = quality)) +
+  coord_flip()
+
+years <- table(coffee$Qualityclass, coffee$harvested)
+years <- as.data.frame(years)
+colnames(years)<- c('quality','year','count')
+
+bar2 <- years %>% 
+  ggplot(aes(x = year, y = count)) +
+  geom_col(aes(fill = quality))
+
+bar1
+bar2
+```
+
