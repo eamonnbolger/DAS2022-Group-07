@@ -15,6 +15,8 @@ library(kableExtra)
 library(skimr)
 library(ggcorrplot)
 library(gridExtra)
+library(countrycode)
+library(sjPlot)
 ```
 
 ```{r data and packages, include=FALSE}
@@ -116,6 +118,18 @@ lay <- cbind(c(1,1,2,2,3,3),
 grid.arrange(box1, box2, box3, box5, box4, box6, layout_matrix = lay)
 ```
 
+```{r conti var, warnings = FALSE}
+
+coffee <- as.data.frame(coffee)
+coffee$continent = countrycode(sourcevar = coffee[,"country"],
+                         origin="country.name",
+                         destination = "continent")
+# United States (Puerto Rico) were not matched unambiguously
+coffee[c(374,408,764,787),"continent"] <- 'Americas'
+coffee <- as_tibble(coffee)
+
+```
+
 Bar plots of quality by country and year.
 
 ```{r bar charts, warnings = FALSE}
@@ -130,16 +144,22 @@ bar1 <- countries %>%
   coord_flip()
 
 bar1
+
+continent <- table(coffee$Qualityclass, coffee$continent)
+continent <- as.data.frame(continent)
+colnames(continent)<- c('quality','continent','count')
+
+bar2 <- continent %>% 
+  ggplot(aes(x = count, y = continent)) +
+  geom_col(aes(fill = quality)) +
+  coord_flip()
+
+bar2
+
+#Easy to compare the quality of coffee beans within the same continent
+plot_xtab(coffee$continent,coffee$Qualityclass, show.values = FALSE,
+          show.total = FALSE,
+          legend.title = "Quality")
+
 ```
 
-```{r conti var, warnings = FALSE}
-
-coffee <- as.data.frame(coffee)
-coffee$continent = countrycode(sourcevar = coffee[,"country"],
-                         origin="country.name",
-                         destination = "continent")
-# United States (Puerto Rico) were not matched unambiguously
-coffee[c(374,408,764,787),"continent"] <- 'Americas'
-coffee <- as_tibble(coffee)
-
-```
