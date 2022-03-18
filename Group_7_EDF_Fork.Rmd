@@ -134,7 +134,12 @@ bar1
 
 ```{r conti var, warnings = FALSE}
 
-
-
+coffee <- as.data.frame(coffee)
+coffee$continent = countrycode(sourcevar = coffee[,"country"],
+                         origin="country.name",
+                         destination = "continent")
+# United States (Puerto Rico) were not matched unambiguously
+coffee[c(374,408,764,787),"continent"] <- 'Americas'
+coffee <- as_tibble(coffee)
 
 ```
