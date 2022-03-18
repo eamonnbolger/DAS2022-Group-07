@@ -32,6 +32,8 @@ Initially, summary statistics reveal a couple of erroneous altitude datapoints. 
 ```{r}
 # removing the two data errors for altitude
 coffee$altitude <- ifelse(coffee$altitude > 8000, NA, coffee$altitude)
+#removing na obs
+coffee <- coffee %>% na.omit()
 ```
 
 
@@ -130,3 +132,9 @@ bar1 <- countries %>%
 bar1
 ```
 
+```{r conti var, warnings = FALSE}
+
+
+
+
+```
