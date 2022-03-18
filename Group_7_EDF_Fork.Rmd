@@ -103,9 +103,15 @@ box5 <- coffee %>%
   labs(x = "Quality Class", y = "# of defects") +
   theme(axis.title = element_text(size = 9))
 
+box6 <- coffee %>%
+  ggplot(aes(x = Qualityclass, y = harvested)) +
+  geom_boxplot(aes(fill = Qualityclass), show.legend = FALSE) +
+  labs(x = "Quality Class", y = "Year") +
+  theme(axis.title = element_text(size = 9))
+
 lay <- cbind(c(1,1,2,2,3,3),
-             c(4,4,4,5,5,5))
-grid.arrange(box1, box2, box3, box5, box4, layout_matrix = lay)
+             c(4,4,5,5,6,6))
+grid.arrange(box1, box2, box3, box5, box4, box6, layout_matrix = lay)
 ```
 
 Bar plots of quality by country and year.
@@ -121,15 +127,6 @@ bar1 <- countries %>%
   geom_col(aes(fill = quality)) +
   coord_flip()
 
-years <- table(coffee$Qualityclass, coffee$harvested)
-years <- as.data.frame(years)
-colnames(years)<- c('quality','year','count')
-
-bar2 <- years %>% 
-  ggplot(aes(x = year, y = count)) +
-  geom_col(aes(fill = quality))
-
 bar1
-bar2
 ```
 
