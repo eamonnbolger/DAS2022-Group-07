@@ -15,6 +15,8 @@ library(kableExtra)
 library(skimr)
 library(ggcorrplot)
 library(gridExtra)
+library(countrycode)
+library(sjPlot)
 ```
 
 ```{r data and packages, include=FALSE}
@@ -32,6 +34,8 @@ Initially, summary statistics reveal a couple of erroneous altitude datapoints. 
 ```{r}
 # removing the two data errors for altitude
 coffee$altitude <- ifelse(coffee$altitude > 8000, NA, coffee$altitude)
+#removing na obs
+coffee <- coffee %>% na.omit()
 ```
 
 
@@ -103,9 +107,27 @@ box5 <- coffee %>%
   labs(x = "Quality Class", y = "# of defects") +
   theme(axis.title = element_text(size = 9))
 
+box6 <- coffee %>%
+  ggplot(aes(x = Qualityclass, y = harvested)) +
+  geom_boxplot(aes(fill = Qualityclass), show.legend = FALSE) +
+  labs(x = "Quality Class", y = "Year") +
+  theme(axis.title = element_text(size = 9))
+
 lay <- cbind(c(1,1,2,2,3,3),
-             c(4,4,4,5,5,5))
-grid.arrange(box1, box2, box3, box5, box4, layout_matrix = lay)
+             c(4,4,5,5,6,6))
+grid.arrange(box1, box2, box3, box5, box4, box6, layout_matrix = lay)
+```
+
+```{r conti var, warnings = FALSE}
+
+coffee <- as.data.frame(coffee)
+coffee$continent = countrycode(sourcevar = coffee[,"country"],
+                         origin="country.name",
+                         destination = "continent")
+# United States (Puerto Rico) were not matched unambiguously
+coffee[c(374,408,764,787),"continent"] <- 'Americas'
+coffee <- as_tibble(coffee)
+
 ```
 
 Bar plots of quality by country and year.
@@ -121,15 +143,23 @@ bar1 <- countries %>%
   geom_col(aes(fill = quality)) +
   coord_flip()
 
-years <- table(coffee$Qualityclass, coffee$harvested)
-years <- as.data.frame(years)
-colnames(years)<- c('quality','year','count')
-
-bar2 <- years %>% 
-  ggplot(aes(x = year, y = count)) +
-  geom_col(aes(fill = quality))
-
 bar1
+
+continent <- table(coffee$Qualityclass, coffee$continent)
+continent <- as.data.frame(continent)
+colnames(continent)<- c('quality','continent','count')
+
+bar2 <- continent %>% 
+  ggplot(aes(x = count, y = continent)) +
+  geom_col(aes(fill = quality)) +
+  coord_flip()
+
 bar2
+
+#Easy to compare the quality of coffee beans within the same continent
+plot_xtab(coffee$continent,coffee$Qualityclass, show.values = FALSE,
+          show.total = FALSE,
+          legend.title = "Quality")
+
 ```
 
