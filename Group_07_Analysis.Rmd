@@ -18,6 +18,6 @@ library(jtools)
 Importing the csv dataset:
 
 ```{r data import}
-coffee <- read.csv('dataset7.csv')
+coffee <- read.csv('dataset7.csv')            #read dataset7
 ```
 
