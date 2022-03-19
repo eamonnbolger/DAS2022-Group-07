@@ -27,6 +27,7 @@ coffee <- coffee %>%
   rename(defects = category_two_defects) %>% 
   rename(country = country_of_origin)
 glimpse(coffee)
+summary(coffee)
 ```
 
 Initially, summary statistics reveal a couple of erroneous altitude datapoints. (The highest two values are many times the altitude of the peak of Mount Everest!)
