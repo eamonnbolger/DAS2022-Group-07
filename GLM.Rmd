@@ -66,6 +66,11 @@ coffee1$Qualityclass = as.factor(coffee1$Qualityclass)
 logit_model = glm(Qualityclass~aroma + flavor + acidity + defects + altitude + harvested + continent, data = coffee1, family = binomial(link = "logit"))
 both_logit = step(logit_model,direction="both")
 summ(both_logit)
+both_logit$anova %>%
+  select(Step, AIC) %>%
+  kable() %>%
+  kable_styling(font_size = 10, latex_options = "hold_position")
+
 ## formula = Qualityclass ~ aroma + flavor + acidity + altitude + harvested
 ## AIC: 533.47, BIC = 562.23
 
@@ -80,6 +85,11 @@ summary(both_logit)$null.deviance - summary(both_logit)$deviance > qchisq(0.95,8
 probit_model = glm(Qualityclass~aroma + flavor + acidity + defects + altitude + harvested + continent, data = coffee1, family = binomial(link = "probit"))
 both_probit = step(probit_model,direction = "both")
 summ(both_probit)
+both_probit$anova %>%
+  select(Step, AIC) %>%
+  kable() %>%
+  kable_styling(font_size = 10, latex_options = "hold_position")
+
 ## formula = Qualityclass ~ aroma + flavor + acidity + altitude + harvested
 ## AIC = 554.03, BIC = 582.79
 ## Fittness of model
@@ -94,6 +104,11 @@ summary(both_probit)$null.deviance - summary(both_probit)$deviance > qchisq(0.95
 clog_model = glm(Qualityclass~aroma + flavor + acidity + defects + altitude + harvested + continent, data = coffee1, family = binomial(link = "cloglog"))
 both_clog = step(clog_model,direction = "both")
 summ(both_clog)
+both_clog$anova %>%
+  select(Step, AIC) %>%
+  kable() %>%
+  kable_styling(font_size = 10, latex_options = "hold_position")
+
 ## formula = Qualityclass ~ aroma + flavor + acidity + harvested
 ## AIC = 636.96, BIC = 660.93
 ## Fittness of model
