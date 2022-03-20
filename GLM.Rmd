@@ -1,0 +1,161 @@
+---
+title: "GLM"
+author: "DAS Group 07"
+date: "19/03/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries, include=FALSE,echo=TRUE}
+library(tidyverse)
+library(kableExtra)
+library(knitr)
+library(skimr)
+library(ggcorrplot)
+library(gridExtra)
+library(countrycode)
+library(car)
+library(moderndive)
+library(jtools)
+```
+
+```{r data, echo= FALSE, eval = TRUE}
+# import and process data
+coffee <- read.csv('dataset7.csv')
+```
+
+```{r process, echo= FALSE, warning=FALSE}
+coffee <- as_tibble(coffee)
+coffee <- coffee %>% 
+  rename(altitude = altitude_mean_meters) %>% 
+  rename(defects = category_two_defects) %>% 
+  rename(country = country_of_origin)
+# removing the two data errors for altitude
+coffee$altitude <- ifelse(coffee$altitude > 8000, NA, coffee$altitude)
+#removing na obs
+coffee <- coffee %>% na.omit()
+coffee <- as.data.frame(coffee)
+```
+
+```{r add variable, echo= FALSE, warning=FALSE}
+coffee$continent = countrycode(sourcevar = coffee[,"country"],
+                               origin="country.name",
+                               destination = "continent")
+coffee[c(374,408,764,787),"continent"] <- 'Americas'
+coffee <- as_tibble(coffee)
+```
+
+# Formal Data Analysis 
+
+In formal data analysis, we use three link functions to fit generalized linear models, then use step-wise regression to select reasonable explanatory variables based on AIC values, and finally use chi-square values to judge the fitness of the model.
+
+```{r model selection, echo= FALSE, warning=FALSE}
+coffee1 <- as.data.frame(coffee)
+
+coffee1[which(coffee1$Qualityclass=="Poor"),]$Qualityclass=0
+coffee1[which(coffee1$Qualityclass=="Good"),]$Qualityclass=1
+
+coffee1$Qualityclass = as.factor(coffee1$Qualityclass)
+```
+
+
+```{r logit, echo= FALSE, warning=FALSE}
+logit_model = glm(Qualityclass~aroma + flavor + acidity + defects + altitude + harvested + continent, data = coffee1, family = binomial(link = "logit"))
+both_logit = step(logit_model,direction="both")
+summ(both_logit)
+## formula = Qualityclass ~ aroma + flavor + acidity + altitude + harvested
+## AIC: 533.47, BIC = 562.23
+
+## Fitness of model
+summary(both_logit)$null.deviance - summary(both_logit)$deviance > qchisq(0.95,891-886)
+## TRUE. we can reject the null hypothesis, and the terms are all significant
+```
+
+```{r probit, echo= FALSE, warning=FALSE}
+
+# Probit link
+probit_model = glm(Qualityclass~aroma + flavor + acidity + defects + altitude + harvested + continent, data = coffee1, family = binomial(link = "probit"))
+both_probit = step(probit_model,direction = "both")
+summ(both_probit)
+## formula = Qualityclass ~ aroma + flavor + acidity + altitude + harvested
+## AIC = 554.03, BIC = 582.79
+## Fittness of model
+summary(both_probit)$null.deviance - summary(both_probit)$deviance > qchisq(0.95,891-886)
+## TRUE. we can reject the null hypothesis, and the terms are all significant
+
+```
+
+
+```{r cloglog, echo= FALSE, warning=FALSE}
+
+clog_model = glm(Qualityclass~aroma + flavor + acidity + defects + altitude + harvested + continent, data = coffee1, family = binomial(link = "cloglog"))
+both_clog = step(clog_model,direction = "both")
+summ(both_clog)
+## formula = Qualityclass ~ aroma + flavor + acidity + harvested
+## AIC = 636.96, BIC = 660.93
+## Fittness of model
+summary(both_clog)$null.deviance - summary(both_clog)$deviance > qchisq(0.95,891-887)
+## TRUE. we can reject the null hypothesis, and the terms are all significant
+
+```
+
+According to the stepwise regression results, the GLM explanatory variables of complementary log-log link are *aroma*, *flavor*, *acidity* and *harvested*, and the GLM explanatory variables of logit link and probit link are *aroma*, *flavor*, *acidity*, *altitude* and *harvested*.
+
+The Pearson chi-squared statistics of three models are all greater than the 95th percentile of the $\chi^{2}(4)$ distribution. Therefore the models fit the data well and We need to choose the appropriate link function by comparing the information criteria.
+
+# GLM Model Selection
+
+The AIC and BIC values corresponding to each link function are as follows:
+
+```{r aicbic, echo= FALSE, warning=FALSE}
+summlogit = summ(both_logit)
+summprobit = summ(both_probit)
+summclog = summ(both_clog)
+aic1 <- round(summlogit$model$aic, 3)
+aic2 <- round(summprobit$model$aic, 3)
+aic3 <- round(summclog$model$aic, 3)
+```
+ 
+ Link                      | Link Function   | AIC      | BIC   
+ :-------------------------|:--------------- |:--------:|:-----:
+ Logit link                | $g\left(p_{i}\right)=\log \left(\frac{p_{i}}{1-p_{i}}\right)$             | 533.47   | 562.23    
+ Probit link               | $g\left(p_{i}\right)=\Phi^{-1}\left(p_{i}\right)=\beta_{0}+\beta_{1} x_{i}$             | 554.03   | 582.79   
+ Complementary log-log link| $g\left(p_{i}\right)=\log \left[-\log \left(1-p_{i}\right)\right]=\beta_{0}+\beta_{1} x_{i}$             | 636.96    | 660.93  
+
+Based on the AIC and BIC values in the table above, the model using logit link fits best in three. So we finally choose the logit link function in GLM.
+
+The GLM regression model of logit link is as follows:
+
+$$
+Y \sim B(m_i, p{(\text {Qualityclass = Good})}_i),
+$$
+
+$$
+g\left(p{(\text {Qualityclass = Good})}_{i}\right)=\log \left(\frac{p{(\text {Qualityclass = Good})}_{i}}{1-p{(\text {Qualityclass = Good})}_{i}}\right),
+$$
+
+```{r logitformula, echo= FALSE, warning=FALSE}
+logitsele = summary(both_logit)
+Coefs <- round(coef(logitsele), 4)
+```
+
+$$
+\log \left(\frac{p{(\text {Qualityclass = Good})}}{1-p{(\text {Qualityclass = Good})}}\right) = `r Coefs[1]` + `r Coefs[2]` \cdot aroma + `r Coefs[3]` \cdot flavor + `r Coefs[4]` \cdot acidity + `r Coefs[5]` \cdot altitude + `r Coefs[6]` \cdot harvested.
+$$
+
+
+
+Considering that the correlation coefficient of aroma, flavor and acidity in EDA is relatively large, we calculated the VIF value of the variables in the regression. 
+
+```{r VIF, echo= FALSE, warning=FALSE}
+vif(both_logit) %>%
+  kable(caption = '\\label{tab:VIF} VIF of Variables', digits = 2)%>%
+  kable_styling(latex_options = "hold_position")
+```
+
+The results show that the VIF values are all small, excluding multicollinearity.
+
+
