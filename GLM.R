@@ -1,12 +1,15 @@
 library(tidyverse)
 library(kableExtra)
+library(knitr)
 library(skimr)
 library(ggcorrplot)
 library(gridExtra)
 library(countrycode)
+library(car)
 library(moderndive)
 library(jtools)
 
+# import and process data
 coffee <- read.csv('dataset7.csv')
 coffee <- as_tibble(coffee)
 coffee <- coffee %>% 
@@ -21,6 +24,7 @@ coffee$altitude <- ifelse(coffee$altitude > 8000, NA, coffee$altitude)
 coffee <- coffee %>% na.omit()
 coffee <- as.data.frame(coffee)
 
+#add variable
 coffee$continent = countrycode(sourcevar = coffee[,"country"],
                                origin="country.name",
                                destination = "continent")
@@ -72,8 +76,12 @@ summ(both_clog)
 summary(both_clog)$null.deviance - summary(both_clog)$deviance > qchisq(0.95,891-887)
 ## TRUE. we can reject the null hypothesis, and the terms are all significant
 
+#excluding multicollinearity
+vif(both_logit)
+
+
 #
 mod = glm(Qualityclass~ aroma:flavor:acidity + altitude + harvested, data = coffee1, family = binomial(link = "logit"))
-summ(mod)
+summary(mod)
 mod1 = glm(Qualityclass~ aroma + flavor + acidity + aroma:flavor:acidity + altitude + harvested, data = coffee1, family = binomial(link = "logit"))
 summary(mod1)
