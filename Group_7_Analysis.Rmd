@@ -320,3 +320,15 @@ vif(both_logit) %>%
 The results show that the VIF values are all small, excluding multicollinearity.
 
 # Conclusion and Further Work
+
+As we can see from the predict model, where p=Prob(Good) and 1−p=Prob(Poor). 
+-439.4115 is the intercept coefficient. The correlation coefficients of explanatory variables to quality score for the batch are all positive, which means as follows:
+(1) the log-odds of the qualityclass being good increases as the grade of aroma, flavor and acidity increase.
+(2) the log-odds of qualityclass being good increases as the mean altitude of the grower farm increases.
+(3) the log-odds of qualityclass being good increases as the year increases. 
+This provides us with a point estimate of how the log-odds changes with aroma grade, flavor grade, acidity grade, altitude meters and year. Therefore, if we want to improve the quality of coffee, we should focus on raising the level of the aroma, flavor and acidity grade, plant seeds at high elevations and extend the harvest year.
+
+
+
+
+
