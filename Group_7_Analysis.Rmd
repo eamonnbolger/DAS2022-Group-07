@@ -148,7 +148,7 @@ coffee <- as_tibble(coffee)
 
 ```
 
-Bar plots of quality by country and year.
+Bar plots of quality by country. (add continent variable)
 
 ```{r bar charts, warnings = FALSE}
 
